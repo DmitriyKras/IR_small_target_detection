@@ -9,14 +9,13 @@ If name of function contain "clf" - it combined with segmentation and classifica
 
 utils.py contains algorithms for collecting meta data from dataset folder and testing detection methodes to get metrics
 
-Example:
+# Example:
 
 import utils as u
-# load dataset and create meta DataFrame
+#load dataset and create meta DataFrame
 dsfolder = "your_dataset_folder"
 loader = u.MetaLoader(dsfolder)
 data = loader.train_val_split(0.1)[0]
-
 ev = u.Evaluate(data) # create Evaluate object
 
 
