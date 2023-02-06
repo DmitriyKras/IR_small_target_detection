@@ -217,15 +217,13 @@ def multy_feature_clf(fmap, clst, thresh, max_obj = 1):
     
     
 
-def min_loc_LoG(img, thresh, k_size = 9, sigma = 1.8):
+def min_loc_LoG(img, k_size = 9, sigma = 1.8):
     """
     Perform min-loc-LoG filtering of grayscale image img
     Sungho K. Min-local-LoG Filter for Detecting Small Targets in 
     Cluttered Background // Electronics Letters. 
     – 2011. – Vol. 47. – № 2. – P. 105-106. DOI: 10.1049/el.2010.2066.
-    
-    thresh - threshold for fmap segmentation
-    
+
     sigma - std of gaussian
     k_size - size of kernel
     """
@@ -261,7 +259,25 @@ def min_loc_LoG(img, thresh, k_size = 9, sigma = 1.8):
     In = sig.convolve2d(move(img, 0, -4), fN, mode = "same")
     f = np.dstack((Ie, Is, Iw, In))
     fmap = np.min(f, axis = 2)
+    return fmap
+
+def min_loc_LoG_clf(img, thresh, k_size = 9, sigma = 1.8):
+    """
+    Perform min-loc-LoG filtering of grayscale image img and
+    classification with threshold segmentation
+    
+    Sungho K. Min-local-LoG Filter for Detecting Small Targets in 
+    Cluttered Background // Electronics Letters. 
+    – 2011. – Vol. 47. – № 2. – P. 105-106. DOI: 10.1049/el.2010.2066.
+    
+    thresh - threshold for fmap segmentation
+    
+    sigma - std of gaussian
+    k_size - size of kernel
+    """
+    fmap = min_loc_LoG(img, k_size = 9, sigma = 1.8)
     return find_clusters(fmap, thresh)
+    
 
 def LCM(img, w_size = 15):
     """
@@ -309,6 +325,23 @@ def LCM(img, w_size = 15):
     out = np.array([LCM_processing(roi) for roi in patches])
     
     return out.reshape(img.shape[0], img.shape[1])
+
+def LCM_clf(img, thresh, w_size = 15):
+    """
+    Perform LCM filtering of grayscale image img and
+    classification with threshold segmentation
+    
+    Chen C.L.P., Li H., Wei Y., Xia T., Tang Y.Y. 
+    A Local Contrast Method for Small Infrared Target Detection 
+    // IEEE Transactions on Geoscience and Remote Sensing. – 2014. 
+    – Vol. 52. – № 1. – P. 574-581. DOI: 10.1109/TGRS.2013.2242477
+    
+    thresh - threshold for fmap segmentation
+    
+    w_size - size of square sliding window
+    """
+    fmap = LCM(img, w_size)
+    return find_clusters(fmap, thresh)
 
 def ACSD(img, M = 5, N = 9, k = 0.15):
     """
@@ -366,6 +399,22 @@ def ACSD(img, M = 5, N = 9, k = 0.15):
     
     out = np.array([ACSD_processing(roi) for roi in patches])
     return out.reshape(img.shape[0], img.shape[1])
+
+def ACSD_clf(img, thresh, M = 5, N = 9, k = 0.15):
+    """
+    Perform ACSD filtration on image img
+    
+    Xie K., Fu K., Zhou T., Zhang J., Yang J., Wu Q. 
+    Small Target Detection Based On Accumulated Center-Surround Difference Measure 
+    // Infrared Physics & Technology. – 2014. – Vol. 67. – P. 229-236. 
+    DOI: 10.1016/j.infrared.2014.07.006
+    
+    M - size of inner square window
+    N - size of outer square window, so N > M
+    k - coef in weight function
+    """
+    fmap = ACSD(img, M, N, k)
+    return find_clusters(fmap, thresh)
 
 def wavelet(img):
     """
