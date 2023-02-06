@@ -108,13 +108,10 @@ class Evaluate:
         '''
         BSF = []
         SNRg = []
-        for img in self.image_list:
-            image = cv2.cvtColor(cv2.imread(str(img)), cv2.COLOR_BGR2GRAY)
-            labels = open(str(self.meta.loc[img].values[0]), "r").readlines()
-            label = [[float(i) for i in 
-                     labels[j].split()] 
-                     for j in range(len(labels))]
-            label = np.array(label).astype('int32')
+        num_obj = self.boxes.shape[0]
+        for i in range(num_obj):
+            image = self.images[i,:,:]
+            label = self.boxes[i, :].reshape(1,4)
             fmap = alg(image)
             if np.isnan(fmap).max() == True:
                 print("NaN detected")
@@ -193,76 +190,11 @@ class Evaluate:
                 "F-score" : TP / (TP + 0.5 * (FP + FN))
                 }
     
-    def get_detection_metrics_seg(self, filt, seg, 
-                              thresh, bin_thresh = "adaptive"):
-        '''
-        filt - filtering algorithm
-        seg - segmentation algorithm
-        thresh - IoU threshold
-        '''
-        num_obj = self.boxes.shape[0] # total number of objects on image
-        TP = 0 # number of true positive detections
-        FP = 0 # number of false positive detections
-        FN = 0 # number of false negative detections
-        for i in range(num_obj):
-            fmap = filt(self.images[i,:,:])
-            clust = seg(fmap, bin_thresh)
-            if clust.size != 0:
-                iou_gt = iou(clust, np.repeat(self.boxes[i, :].reshape(1,4),
-                                                       clust.shape[0], axis = 0))
-                
-                if (iou_gt > thresh).sum() >= 1:
-                    TP += 1
-                FP += (iou_gt <= thresh).sum()
-                if (iou_gt > thresh).sum() == 0:
-                    FN += 1
-            else: FN += 1
-
-        return {
-                "True Detection Rate" : TP / num_obj, 
-                "False Alarm Rate" : FP / (FP + TP),
-                "Precision" : TP / (TP + FP),
-                "Recall" : TP / (TP + FN),
-                "F-score" : TP / (TP + 0.5 * (FP + FN))
-                }
-    
-    def get_ROC_object_var(self, alg, bin_thresh , max_obj = 10):
-        """
-        Compute points in ROC-curve
-        alg - tuple(filter, segment, clf)
-        bin_thresh - tuple of thresh segmentation values
-        max_obj - number of points
-        """
-        ROC = {}
-        c = 0 # counter
-        iters = len(bin_thresh)*len(range(1, max_obj))
-        for K in bin_thresh:
-            pts = np.zeros((len(range(1, max_obj)), 2))
-            for obj in range(1, max_obj):
-                c += 1
-                metr = self.get_detection_metrics(alg[0], alg[1], alg[2], 
-                                          0, bin_thresh = K, max_obj = obj)
-                pts[obj - 1, 0] = metr["True Detection Rate"]
-                pts[obj - 1, 1] = metr["False Alarm Rate"]
-                print("Processing...  ", (c / iters) * 100, "% done")
-            ROC[K] = pts
-        return ROC
-   
-    def plot_ROC(self, ROC):
-        keys = list(ROC.keys())
-        plt.figure(figsize = (10, 10))
-        for K in keys:
-            plt.plot(ROC[K][:, 1], ROC[K][:, 0], label = str(K))
-        plt.title("ROC-curve")
-        plt.xlabel("False Alarm Rate")
-        plt.ylabel("True Detection Rate")
-        plt.legend(title = "Segmentation coefs")
-        plt.show()
         
-    def get_ROC_thresh_var(self, alg, bin_thresh):
+    def get_ROC(self, alg, bin_thresh):
         """
         Compute points in ROC-curve
-        alg - tuple(filter, segment)
+        alg - complete algorithm
         bin_thresh - tuple of thresh segmentation values
         """
         c = 0 # counter
