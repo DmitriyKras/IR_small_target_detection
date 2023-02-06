@@ -9,15 +9,26 @@ If name of function contain "clf" - it combined with segmentation and classifica
 
 utils.py contains algorithms for collecting meta data from dataset folder and testing detection methodes to get metrics
 
-# Example:
+# Dependencies
+Pandas - meta; NumPy, OpenCV, SciPy, PyWavelets, Tensorflow - computations; Matplotlib - visualisation.
+
+# Example
 
 import utils as u
+
 #load dataset and create meta DataFrame
+
 dsfolder = "your_dataset_folder"
+
 loader = u.MetaLoader(dsfolder)
+
 data = loader.train_val_split(0.1)[0]
+
 ev = u.Evaluate(data) # create Evaluate object
 
 
+
+# Notes
 get_filtering_metrics - requires only feature extraction algorithm such as LCM or top_hat
+
 get_detection_metrics and get_ROC - requires complete algorithm such as LCM_clf or top_hat_clf
